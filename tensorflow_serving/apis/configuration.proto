@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package tensorflow.serving;
+import "tensorflow_serving/config/model_server_config.proto";
+
+option cc_enable_arenas = true;
+
+message ConfigurationRequest {
+
+  // Was the configuration successful
+  ModelServerConfig config = 1; 
+}
+
+
+message ConfigurationResponse {
+
+  // Was the configuration successful
+  bool success = 1;
+  
+  // The error message if unsuccessful  
+  string error_message = 2;
+}

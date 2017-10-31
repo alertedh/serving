@@ -32,12 +32,18 @@ import threading
 
 # This is a placeholder for a Google-internal import.
 
-from grpc.beta import implementations
+#from grpc.beta import implementations
+import grpc
 import numpy
 import tensorflow as tf
 
+from tensorflow_serving.apis import get_model_metadata_pb2
 from tensorflow_serving.apis import predict_pb2
 from tensorflow_serving.apis import prediction_service_pb2
+from tensorflow_serving.apis import configuration_pb2
+from tensorflow_serving.apis import configuration_service_pb2_grpc
+from tensorflow_serving.config import model_server_config_pb2
+
 import mnist_input_data
 
 
@@ -138,8 +144,38 @@ def do_inference(hostport, work_dir, concurrency, num_tests):
   """
   test_data_set = mnist_input_data.read_data_sets(work_dir).test
   host, port = hostport.split(':')
-  channel = implementations.insecure_channel(host, int(port))
-  stub = prediction_service_pb2.beta_create_PredictionService_stub(channel)
+  #channel = implementations.insecure_channel(host, int(port))
+  channel = grpc.insecure_channel(host+":"+port)
+  #pred_stub = prediction_service_pb2.beta_create_PredictionService_stub(channel)
+  pred_stub = prediction_service_pb2.PredictionServiceStub(channel)
+  conf_stub = configuration_service_pb2_grpc.ConfigurationServiceStub(channel)
+  # config = model_server_config_pb2.ModelServerConfig()
+  # msList = model_server_config_pb2.ModelConfigList()
+  # mConf1 = model_server_config_pb2.ModelConfig()
+  # mConf1.name = 'mnist'
+  # mConf1.base_path = 's3://singulariti-tensorflowmodels-dev/mnist_model100'
+  # mConf1.model_platform = 'tensorflow'
+  # mConf2 = model_server_config_pb2.ModelConfig()
+  # mConf2.name = 'mnist2'
+  # mConf2.base_path = 's3://singulariti-tensorflowmodels-dev/mnist_model100'
+  # mConf2.model_platform = 'tensorflow'
+
+  # msList.config.extend([mConf1, mConf2])
+
+  # config.model_config_list.CopyFrom(msList)
+
+  # configurationRequest = configuration_pb2.ConfigurationRequest()
+  # configurationRequest.config.CopyFrom(config)
+  # conf_stub.Configure(configurationRequest)
+
+  request = get_model_metadata_pb2.GetModelMetadataRequest()
+  request.model_spec.name = 'mnist'
+  #request.metadata_field.extend(['signature_def'])
+  request.metadata_field.extend(['preprocessing_settings'])
+  print(request)
+  resultttt = pred_stub.GetModelMetadata(request,5.0)
+  print(resultttt)
+
   result_counter = _ResultCounter(num_tests, concurrency)
   for _ in range(num_tests):
     request = predict_pb2.PredictRequest()
@@ -149,7 +185,7 @@ def do_inference(hostport, work_dir, concurrency, num_tests):
     request.inputs['images'].CopyFrom(
         tf.contrib.util.make_tensor_proto(image[0], shape=[1, image[0].size]))
     result_counter.throttle()
-    result_future = stub.Predict.future(request, 5.0)  # 5 seconds
+    result_future = pred_stub.Predict.future(request, 5.0)  # 5 seconds
     result_future.add_done_callback(
         _create_rpc_callback(label[0], result_counter))
   return result_counter.get_error_rate()
@@ -169,3 +205,4 @@ def main(_):
 
 if __name__ == '__main__':
   tf.app.run()
+

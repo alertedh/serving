@@ -46,6 +46,8 @@ serving_proto_library_py(
     ],
 )
 
+
+
 serving_proto_library(
     name = "input_proto",
     srcs = ["input.proto"],
@@ -143,11 +145,66 @@ py_library(
     deps = [
         ":classification_proto_py_pb2",
         ":get_model_metadata_proto_py_pb2",
+        ":get_model_preprocessing_settings_proto_py_pb2",
         ":inference_proto_py_pb2",
         ":predict_proto_py_pb2",
         ":regression_proto_py_pb2",
     ],
 )
+
+####################CAL INSERT################################
+serving_proto_library(
+    name = "configuration_proto",
+    srcs = ["configuration.proto"],
+    cc_api_version = 2,
+    go_api_version = 2,
+    java_api_version = 2,
+    deps = [
+	"//tensorflow_serving/config:model_server_config_proto"
+    ],
+)
+
+serving_proto_library_py(
+    name = "configuration_proto_py_pb2",
+    srcs = ["configuration.proto"],
+    proto_library = "configuration_proto",
+    deps = [
+	"//tensorflow_serving/config:model_server_config_py_pb2",
+	"@org_tensorflow//tensorflow/core:protos_all_py",	
+    ],
+)
+
+serving_proto_library(
+    name = "configuration_service_proto",
+    srcs = ["configuration_service.proto"],
+    has_services = 1,
+    cc_api_version = 2,
+    cc_grpc_version = 1,
+    go_api_version = 2,
+    java_api_version = 2,
+    deps = [
+	":configuration_proto",
+    ],
+)
+
+serving_proto_library_py(
+    name = "configuration_service_py_pb2",
+    srcs = ["configuration_service.proto"],
+    proto_library = "configuration_service_proto",
+    deps = [
+        ":configuration_proto_py_pb2",
+        "@org_tensorflow//tensorflow/core:protos_all_py",
+    ],
+)
+
+py_library(
+    name = "configuration_service_py_pb2_grpc",
+    srcs = ["configuration_service_pb2_grpc.py"],
+    deps = [
+        ":configuration_service_py_pb2"
+    ],
+)
+##############################################################
 
 serving_go_grpc_library(
     name = "prediction_service_grpc",

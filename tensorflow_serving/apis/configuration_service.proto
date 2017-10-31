@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package tensorflow.serving;
+option cc_enable_arenas = true;
+
+import "tensorflow_serving/apis/configuration.proto";
+
+
+// open source marker; do not remove
+// ConfigureService provides the facility to configure the server
+// at runtime
+service ConfigurationService {
+  // Configure -- Configures a Service.
+  rpc Configure(ConfigurationRequest) returns (ConfigurationResponse);
+}
+
+

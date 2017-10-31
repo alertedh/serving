@@ -76,6 +76,8 @@ limitations under the License.
 #include "tensorflow_serving/servables/tensorflow/multi_inference.h"
 #include "tensorflow_serving/servables/tensorflow/predict_impl.h"
 #include "tensorflow_serving/servables/tensorflow/regression_service.h"
+#include "tensorflow_serving/apis/configuration_service.grpc.pb.h"
+#include "tensorflow_serving/apis/configuration_service.pb.h"
 
 namespace grpc {
 class ServerCompletionQueue;
@@ -113,6 +115,10 @@ using tensorflow::serving::PredictResponse;
 using tensorflow::serving::RegressionRequest;
 using tensorflow::serving::RegressionResponse;
 using tensorflow::serving::PredictionService;
+using tensorflow::serving::ConfigurationRequest;
+using tensorflow::serving::ConfigurationResponse;
+using tensorflow::serving::ConfigurationService;
+
 
 namespace {
 
@@ -182,9 +188,37 @@ grpc::Status ToGRPCStatus(const tensorflow::Status& status) {
                       error_message);
 }
 
+class ConfigurationServiceImpl final : public ConfigurationService::Service {
+  public:
+	explicit ConfigurationServiceImpl(ServerCore* core)
+	  : core_(core) {}
+
+	grpc::Status Configure(ServerContext* context, const ConfigurationRequest* request,
+			ConfigurationResponse* response) override {
+		LOG(INFO) << "Attempting to reconfigure..." << std::endl;
+		LOG(INFO) << "Core is:" << core_ << std::endl;
+		if(core_) { // check server core is there			
+			const grpc::Status status = ToGRPCStatus(core_->ReloadConfig(request->config()));
+
+			if (!status.ok()) {
+				VLOG(1) << "Configuration Failed: " << status.error_message();
+				LOG(INFO) << "Configuration Failed:" << status.error_message();
+			}
+			LOG(INFO) << "Configuration Successful" << std::endl;
+			response->set_success(status.ok());
+			return status;
+		}
+		LOG(INFO) << "Didn't Finda a servercore " << std::endl;
+		return grpc::Status::OK; // should probably return fail here...
+	}
+
+  private:
+	ServerCore* core_;
+};
+
 class PredictionServiceImpl final : public PredictionService::Service {
  public:
-  explicit PredictionServiceImpl(std::unique_ptr<ServerCore> core,
+  explicit PredictionServiceImpl(ServerCore* core,
                                  bool use_saved_model)
       : core_(std::move(core)),
         predictor_(new TensorflowPredictor(use_saved_model)),
@@ -197,7 +231,7 @@ class PredictionServiceImpl final : public PredictionService::Service {
     run_options.set_timeout_in_ms(
         DeadlineToTimeoutMillis(context->raw_deadline()));
     const grpc::Status status = ToGRPCStatus(
-        predictor_->Predict(run_options, core_.get(), *request, response));
+        predictor_->Predict(run_options, core_, *request, response));
     if (!status.ok()) {
       VLOG(1) << "Predict failed: " << status.error_message();
     }
@@ -214,7 +248,7 @@ class PredictionServiceImpl final : public PredictionService::Service {
     }
     const grpc::Status status =
         ToGRPCStatus(GetModelMetadataImpl::GetModelMetadata(
-            core_.get(), *request, response));
+            core_, *request, response));
     if (!status.ok()) {
       VLOG(1) << "GetModelMetadata failed: " << status.error_message();
     }
@@ -230,7 +264,7 @@ class PredictionServiceImpl final : public PredictionService::Service {
         DeadlineToTimeoutMillis(context->raw_deadline()));
     const grpc::Status status =
         ToGRPCStatus(TensorflowClassificationServiceImpl::Classify(
-            run_options, core_.get(), *request, response));
+            run_options, core_, *request, response));
     if (!status.ok()) {
       VLOG(1) << "Classify request failed: " << status.error_message();
     }
@@ -246,7 +280,7 @@ class PredictionServiceImpl final : public PredictionService::Service {
         DeadlineToTimeoutMillis(context->raw_deadline()));
     const grpc::Status status =
         ToGRPCStatus(TensorflowRegressionServiceImpl::Regress(
-            run_options, core_.get(), *request, response));
+            run_options, core_, *request, response));
     if (!status.ok()) {
       VLOG(1) << "Regress request failed: " << status.error_message();
     }
@@ -261,7 +295,7 @@ class PredictionServiceImpl final : public PredictionService::Service {
     run_options.set_timeout_in_ms(
         DeadlineToTimeoutMillis(context->raw_deadline()));
     const grpc::Status status = ToGRPCStatus(
-        RunMultiInference(run_options, core_.get(), *request, response));
+        RunMultiInference(run_options, core_, *request, response));
     if (!status.ok()) {
       VLOG(1) << "MultiInference request failed: " << status.error_message();
     }
@@ -269,7 +303,7 @@ class PredictionServiceImpl final : public PredictionService::Service {
   }
 
  private:
-  std::unique_ptr<ServerCore> core_;
+  ServerCore* core_;
   std::unique_ptr<TensorflowPredictor> predictor_;
   bool use_saved_model_;
 };
@@ -278,11 +312,13 @@ void RunServer(int port, std::unique_ptr<ServerCore> core,
                bool use_saved_model) {
   // "0.0.0.0" is the way to listen on localhost in gRPC.
   const string server_address = "0.0.0.0:" + std::to_string(port);
-  PredictionServiceImpl service(std::move(core), use_saved_model);
+  PredictionServiceImpl pred_service(core.get(), use_saved_model);
+  ConfigurationServiceImpl conf_service(core.get());
   ServerBuilder builder;
   std::shared_ptr<grpc::ServerCredentials> creds = InsecureServerCredentials();
   builder.AddListeningPort(server_address, creds);
-  builder.RegisterService(&service);
+  builder.RegisterService(&pred_service);
+  builder.RegisterService(&conf_service);
   builder.SetMaxMessageSize(tensorflow::kint32max);
   std::unique_ptr<Server> server(builder.BuildAndStart());
   LOG(INFO) << "Running ModelServer at " << server_address << " ...";

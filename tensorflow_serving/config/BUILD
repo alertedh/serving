@@ -19,6 +19,7 @@ filegroup(
 )
 
 load("//tensorflow_serving:serving.bzl", "serving_proto_library")
+load("//tensorflow_serving:serving.bzl", "serving_proto_library_py")
 
 serving_proto_library(
     name = "model_server_config_proto",
@@ -31,6 +32,45 @@ serving_proto_library(
         "@protobuf_archive//:cc_wkt_protos",
     ],
 )
+
+####################caladded#####################################
+serving_proto_library_py(
+    name = "model_server_config_py_pb2",
+    srcs = [
+        "model_server_config.proto",
+    ],
+    proto_library = "model_server_config_proto",
+    deps = [
+	":logging_config_py_pb2",
+	"//tensorflow_serving/sources/storage_path:file_system_storage_path_source_proto_py_pb2",
+        "@org_tensorflow//tensorflow/core:protos_all_py",
+    ],
+)
+
+serving_proto_library_py(
+    name = "logging_config_py_pb2",
+    srcs = [
+        "logging_config.proto",
+    ],
+    proto_library = "logging_config_proto",
+    deps = [
+	":log_collector_config_py_pb2",
+#        "@org_tensorflow//tensorflow/core:protos_all_py",
+    ],
+)
+
+serving_proto_library_py(
+    name = "log_collector_config_py_pb2",
+    srcs = [
+        "log_collector_config.proto",
+    ],
+    proto_library = "log_collector_config_proto",
+    deps = [
+        #"@org_tensorflow//tensorflow/core:protos_all_py",
+    ],
+)
+
+#################################################################
 
 serving_proto_library(
     name = "platform_config_proto",

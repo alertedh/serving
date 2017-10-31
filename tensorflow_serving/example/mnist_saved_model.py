@@ -124,6 +124,16 @@ def main(_):
           method_name=tf.saved_model.signature_constants.PREDICT_METHOD_NAME))
 
   legacy_init_op = tf.group(tf.tables_initializer(), name='legacy_init_op')
+
+  asset_path = tf.constant("/tmp/asset.txt", dtype=tf.string, name="PreProcessingSettingsAsset")
+  tf.add_to_collection(tf.GraphKeys.ASSET_FILEPATHS, asset_path)
+
+  with tf.gfile.Open("/tmp/asset.txt") as w:
+    pre_proc_string_list = w.readlines()
+    pre_proc_string = ''.join(pre_proc_string_list)
+    preproc_contents = tf.constant(pre_proc_string, dtype=tf.string, name="PreProcessingSettings")
+    tf.add_to_collection("PreProcessingSettings", pre_proc_string)
+
   builder.add_meta_graph_and_variables(
       sess, [tf.saved_model.tag_constants.SERVING],
       signature_def_map={
@@ -132,9 +142,10 @@ def main(_):
           tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
               classification_signature,
       },
+      assets_collection = tf.get_collection(tf.GraphKeys.ASSET_FILEPATHS),
       legacy_init_op=legacy_init_op)
 
-  builder.save()
+  builder.save(as_text=True)
 
   print 'Done exporting!'
 
