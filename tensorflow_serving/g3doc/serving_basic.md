@@ -28,15 +28,16 @@ Before getting started, please complete the
 [prerequisites](setup.md#prerequisites).
 
 Note: All `bazel build` commands below use the standard `-c opt` flag. To
-further optimize the build, refer to the
-[instructions here](setup.md#optimized-build).
+further optimize the build, refer to the [instructions
+here](setup.md#optimized).
 
 ## Train And Export TensorFlow Model
 
 As you can see in `mnist_saved_model.py`, the training is done the same way it
-is in the MNIST For ML Beginners tutorial. The TensorFlow graph is launched in
-TensorFlow session `sess`, with the input tensor (image) as `x` and output
-tensor (Softmax score) as `y`.
+is in the
+[MNIST For ML Beginners tutorial](https://www.tensorflow.org/get_started/mnist/beginners).
+The TensorFlow graph is launched in TensorFlow session `sess`, with the input
+tensor (image) as `x` and output tensor (Softmax score) as `y`.
 
 Then we use TensorFlow's [SavedModelBuilder module](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/saved_model/builder.py)
 to export the model. `SavedModelBuilder` saves a "snapshot" of the trained model
@@ -50,14 +51,12 @@ the following is a short code snippet to illustrate the general process of
 saving a model to disk.
 
 ```python
-from tensorflow.python.saved_model import builder as saved_model_builder
-...
 export_path_base = sys.argv[-1]
 export_path = os.path.join(
       compat.as_bytes(export_path_base),
       compat.as_bytes(str(FLAGS.model_version)))
 print 'Exporting trained model to', export_path
-builder = saved_model_builder.SavedModelBuilder(export_path)
+builder = tf.saved_model.builder.SavedModelBuilder(export_path)
 builder.add_meta_graph_and_variables(
       sess, [tag_constants.SERVING],
       signature_def_map={
@@ -153,12 +152,10 @@ $>rm -rf /tmp/mnist_model
 
 If you would like to install the `tensorflow` and `tensorflow-serving-api` PIP
 packages, you can run all Python code (export and client) using a simple
-`python` command. To install the PIP package, follow the
-[instructions here](setup.md#tensorflow-serving-python-api-pip-package).
-It's also possible to
-use Bazel to build the necessary dependencies and run all code without
-installing those packages. The rest of the codelab will have instructions for
-both the Bazel and PIP options.
+`python` command. To install the PIP package, follow the [instructions
+here](setup.md#pip). It's also possible to use Bazel to build the necessary
+dependencies and run all code without installing those packages. The rest of the
+codelab will have instructions for both the Bazel and PIP options.
 
 Bazel:
 
@@ -216,8 +213,8 @@ $>bazel-bin/tensorflow_serving/model_servers/tensorflow_model_server --port=9000
 ```
 
 If you'd prefer to skip compilation and install using apt-get, follow the
-[instructions here](setup.md#installing-using-apt-get). Then run the server with
-the following command:
+[instructions here](setup.md#aptget). Then run the server with the following
+command:
 
 ```shell
 tensorflow_model_server --port=9000 --model_name=mnist --model_base_path=/tmp/mnist_model/

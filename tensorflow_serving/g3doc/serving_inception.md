@@ -37,13 +37,13 @@ $ docker run --name=inception_container -it $USER/tensorflow-serving-devel
 
 Note: All `bazel build` commands below use the standard `-c opt` flag. To
 further optimize the build, refer to the
-[instructions here](setup.md#optimized-build).
+[instructions here](setup.md#optimized).
 
 In the running container, we clone, configure and build TensorFlow Serving
 example code.
 
 ```shell
-root@c97d8e820ced:/# git clone --recurse-submodules https://github.com/tensorflow/serving
+root@c97d8e820ced:/# git clone -b r1.6 --recurse-submodules https://github.com/tensorflow/serving
 root@c97d8e820ced:/# cd serving/tensorflow
 root@c97d8e820ced:/serving/tensorflow# ./configure
 root@c97d8e820ced:/serving# cd ..
@@ -51,8 +51,7 @@ root@c97d8e820ced:/serving# bazel build -c opt tensorflow_serving/example/...
 ```
 
 Next we can either install a TensorFlow ModelServer with apt-get using the
-[instructions here](setup.md#installing-using-apt-get), or build a ModelServer
-binary using:
+[instructions here](setup.md#aptget), or build a ModelServer binary using:
 
 ```shell
 root@c97d8e820ced:/serving# bazel build -c opt tensorflow_serving/model_servers:tensorflow_model_server
@@ -188,8 +187,9 @@ $ gcloud auth login --project tensorflow-serving
 
 ### Create a container cluster
 
-First we create a [Google Container Engine](https://cloud.google.com/container-engine/)
-cluster for service deployment.
+First we create a
+[Google Kubernetes Engine](https://cloud.google.com/container-engine/) cluster
+for service deployment.
 
 ```shell
 $ gcloud container clusters create inception-serving-cluster --num-nodes 5

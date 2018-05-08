@@ -13,9 +13,8 @@ If you have the prerequisites for Bazel, those instructions consist of the
 following steps:
 
 1.  Download the relevant binary from
-    [here](https://github.com/bazelbuild/bazel/releases).
-    Let's say you downloaded bazel-0.5.4-installer-linux-x86_64.sh. You would
-    execute:
+    [here](https://github.com/bazelbuild/bazel/releases). Let's say you
+    downloaded bazel-0.5.4-installer-linux-x86_64.sh. You would execute:
 
     <pre>
     cd ~/Downloads
@@ -64,7 +63,7 @@ instructions](https://www.tensorflow.org/install/install_sources). Pay
 particular attention to `apt-get install` and `pip install` commands which you
 may need to run.
 
-### TensorFlow Serving Python API PIP package
+### TensorFlow Serving Python API PIP package {#pip}
 
 To run Python client code without the need to install Bazel, you can install
 the `tensorflow-serving-api` PIP package using:
@@ -73,7 +72,14 @@ the `tensorflow-serving-api` PIP package using:
 pip install tensorflow-serving-api
 ```
 
-## Installing using apt-get
+Note: The TensorFlow Serving Python API
+[is only published for Python 2](https://pypi.python.org/pypi/tensorflow-serving-api),
+but will work for Python 3 if you either build it yourself, or download the
+Python 2 version, unzip it, and copy it into your Python 3 path. There is a
+[feature request](https://github.com/tensorflow/serving/issues/700) to publish
+the Python 3 package as well.
+
+## Installing using apt-get {#aptget}
 
 ### Available binaries
 
@@ -138,16 +144,7 @@ to the `git clone` command.
 
 ### Install prerequisites
 
-Follow the Prerequisites section above to install all dependencies.
-To configure TensorFlow, run
-
-```shell
-cd tensorflow
-./configure
-cd ..
-```
-
-Consult the
+Follow the Prerequisites section above to install all dependencies. Consult the
 [TensorFlow install instructions](https://www.tensorflow.org/install/)
 if you encounter any issues with setting up TensorFlow or its dependencies.
 
@@ -179,7 +176,7 @@ bazel test -c opt tensorflow_serving/...
 See the [basic tutorial](serving_basic.md) and [advanced tutorial](serving_advanced.md)
 for more in-depth examples of running TensorFlow Serving.
 
-### Optimized build
+### Optimized build {#optimized}
 
 It's possible to compile using some platform specific instruction sets (e.g.
 AVX) that can significantly improve performance. Wherever you see 'bazel build'

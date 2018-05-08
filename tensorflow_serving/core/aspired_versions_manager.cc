@@ -156,6 +156,8 @@ Status AspiredVersionsManager::Create(
   basic_manager_options.max_num_load_retries = options.max_num_load_retries;
   basic_manager_options.load_retry_interval_micros =
       options.load_retry_interval_micros;
+  basic_manager_options.flush_filesystem_caches =
+      options.flush_filesystem_caches;
   basic_manager_options.servable_event_bus = options.servable_event_bus;
   basic_manager_options.pre_load_hook = std::move(options.pre_load_hook);
   std::unique_ptr<BasicManager> basic_manager;
@@ -175,6 +177,10 @@ AspiredVersionsManager::AspiredVersionsManager(
     : aspired_version_policy_(std::move(aspired_version_policy)),
       target_impl_(new internal::AspiredVersionsManagerTargetImpl(this)),
       basic_manager_(std::move(basic_manager)) {
+  set_num_load_threads_observer_.reset(
+      new Observer<const uint32>([this](const uint32 num_load_threads) {
+        this->SetNumLoadThreads(num_load_threads);
+      }));
   if (manage_state_interval_micros > 0) {
     PeriodicFunction::Options pf_options;
     pf_options.env = env;

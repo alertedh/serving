@@ -1,19 +1,29 @@
 workspace(name = "tf_serving")
 
-local_repository(
+# To update TensorFlow to a new revision.
+# 1. Update the 'git_commit' args below to include the new git hash.
+# 2. Get the sha256 hash of the archive with a command such as...
+#    curl -L https://github.com/tensorflow/tensorflow/archive/<git hash>.tar.gz | sha256sum
+#    and update the 'sha256' arg with the result.
+# 3. Request the new archive to be mirrored on mirror.bazel.build for more
+#    reliable downloads.
+load("//tensorflow_serving:repo.bzl", "tensorflow_http_archive")
+
+tensorflow_http_archive(
     name = "org_tensorflow",
-    path = "tensorflow",
+    sha256 = "8028d51b4a911adeb9b8afa0ba6bcb99fa00a4949881cdad3ee67a8f33c8979a",
+    git_commit = "3128b43eb0bf37ac3c49cb22a6e1789d8ea346e8",
 )
 
 # TensorFlow depends on "io_bazel_rules_closure" so we need this here.
 # Needs to be kept in sync with the same target in TensorFlow's WORKSPACE file.
 http_archive(
     name = "io_bazel_rules_closure",
-    sha256 = "110fe68753413777944b473c25eed6368c4a0487cee23a7bac1b13cc49d3e257",
-    strip_prefix = "rules_closure-4af89ef1db659eb41f110df189b67d4cf14073e1",
+    sha256 = "a38539c5b5c358548e75b44141b4ab637bba7c4dc02b46b1f62a96d6433f56ae",
+    strip_prefix = "rules_closure-dbb96841cc0a5fb2664c37822803b06dab20c7d1",
     urls = [
-        "http://mirror.bazel.build/github.com/bazelbuild/rules_closure/archive/4af89ef1db659eb41f110df189b67d4cf14073e1.tar.gz",
-        "https://github.com/bazelbuild/rules_closure/archive/4af89ef1db659eb41f110df189b67d4cf14073e1.tar.gz",  # 2017-08-28
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_closure/archive/dbb96841cc0a5fb2664c37822803b06dab20c7d1.tar.gz",
+        "https://github.com/bazelbuild/rules_closure/archive/dbb96841cc0a5fb2664c37822803b06dab20c7d1.tar.gz",  # 2018-04-13
     ],
 )
 
@@ -23,6 +33,6 @@ load("//tensorflow_serving:workspace.bzl", "tf_serving_workspace")
 tf_serving_workspace()
 
 # Specify the minimum required bazel version.
-load("@org_tensorflow//tensorflow:workspace.bzl", "check_version")
+load("@org_tensorflow//tensorflow:version_check.bzl", "check_bazel_version_at_least")
 
-check_version("0.5.4")
+check_bazel_version_at_least("0.5.4")

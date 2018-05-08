@@ -35,8 +35,8 @@ Before getting started, please complete the
 [prerequisites](setup.md#prerequisites).
 
 Note: All `bazel build` commands below use the standard `-c opt` flag. To
-further optimize the build, refer to the
-[instructions here](setup.md#optimized-build).
+further optimize the build, refer to the [instructions
+here](setup.md#optimized).
 
 ## Train And Export TensorFlow Model
 
@@ -165,8 +165,8 @@ that monitors cloud storage instead of local storage, or you could build a
 version policy plugin that does version transition in a different way -- in
 fact, you could even build a custom model plugin that serves non-TensorFlow
 models. These topics are out of scope for this tutorial. However, you can refer
-to the [custom source](custom_source.md) and [custom servable]
-(custom_servable.md) tutorials for more information.
+to the [custom source](custom_source.md) and
+[custom servable](custom_servable.md) tutorials for more information.
 
 ## Batching
 
@@ -250,7 +250,7 @@ To put all these into the context of this tutorial:
     servables that can be loaded.
 
   * `AspiredVersionsManager` monitors the export stream, and manages lifecycle
-    of all SavedModelBundle` servables dynamically.
+    of all `SavedModelBundle` servables dynamically.
 
 `TensorflowPredictImpl::Predict` then just:
 
